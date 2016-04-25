@@ -18,6 +18,7 @@ public class Main {
     public static final ArrayList<Pair<String,String>> _userlist = user.getUserList();
     public static final Group group = new Group();
     public static final ArrayList<Pair<String,String>> _grouplist = group.getGroupList();
+    public static final PublicKey publicKey= new PublicKey();
 
 	public static void main(String[] args) throws IOException {
 		try 

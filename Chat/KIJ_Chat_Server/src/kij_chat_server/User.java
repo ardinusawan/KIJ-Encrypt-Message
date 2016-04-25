@@ -16,6 +16,7 @@ public class User {
     private ArrayList<Pair<String,String>> _userlist = new ArrayList<>();
     
     User() {
+        //(ID,PASS)
         _userlist.add(new Pair("Admin", "Admin"));
         _userlist.add(new Pair("Andi", "Andi"));
         _userlist.add(new Pair("Budi", "Budi"));

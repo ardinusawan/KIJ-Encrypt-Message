@@ -16,6 +16,8 @@ public class Client implements Runnable{
 	private Socket socket;//SOCKET INSTANCE VARIABLE
         private String username;
         private boolean login = false;
+        private boolean hasLogin=false;
+        //Main father;
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
@@ -27,6 +29,7 @@ public class Client implements Runnable{
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
+                //this.father=fatherInput;
 	}
 	
 	@Override
@@ -45,13 +48,18 @@ public class Client implements Runnable{
 //					System.out.println("Client Said: " + input);//PRINT IT OUT TO THE SCREEN
 //					out.println("You Said: " + input);//RESEND IT TO THE CLIENT
 //					out.flush();//FLUSH THE STREAM
-                                        
+                                        System.out.println(input);
                                         // param LOGIN <userName> <pass>
                                         if (input.split(" ")[0].toLowerCase().equals("login") == true) {
                                             String[] vals = input.split(" ");
-                                            
+                                            hasLogin=false;
+                                            for (Pair<Socket, String> selGroup : _loginlist) {
+                                                if (selGroup.getSecond().equals(vals[1])) {
+                                                    hasLogin=true;
+                                                }
+                                            }
                                             if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {
-                                                if (this.login == false) {
+                                                if (this.login == false && this.hasLogin==false) {
                                                     this._loginlist.add(new Pair(this.socket, vals[1]));
                                                     this.username = vals[1];
                                                     this.login = true;
@@ -84,6 +92,15 @@ public class Client implements Runnable{
                                                 out.flush();
                                             }
                                         }
+                                        
+                                        //public Key
+//                                        if (input.split(" ")[0].toLowerCase().equals("publicKey") == true) {
+//                                            String[] vals = input.split(" ");
+//                                            
+//                                            if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
+//                                                father.publicKey.addPublicKey(this.username,vals[1]);
+//                                            } 
+//                                        }
                                         
                                         // param PM <userName dst> <message>
                                         if (input.split(" ")[0].toLowerCase().equals("pm") == true) {

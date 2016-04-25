@@ -3,6 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+/*
+    Buat nerima input dari CMD
+*/
 package kij_chat_client;
 
 import java.io.PrintWriter;
@@ -48,9 +51,10 @@ public class Write implements Runnable {
                                 
                                 MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
                                 messageDigest.update(input.getBytes());
-                                String encryptedString = new String(messageDigest.digest());
-                                System.out.println(encryptedString); //print hash
+                                String hashedString = new String(messageDigest.digest());
+                                System.out.println(hashedString); //print hash
                                 //End Hash
+                                //input=input+hashedString;//msg+hash
                                 
                                 //Start RSA encrypt
                                 // Get an instance of the RSA key generator
@@ -61,23 +65,26 @@ public class Write implements Runnable {
                                 // Get an instance of the Cipher for RSA encryption/decryption
                                 Cipher c = Cipher.getInstance("RSA");
                                 // Initiate the Cipher, telling it that it is going to Encrypt, giving it the public key
-                                c.init(Cipher.ENCRYPT_MODE, myPair.getPublic()); 
+                                c.init(Cipher.ENCRYPT_MODE, myPair.getPrivate()); 
                                 
                                 // Create a secret message
                                 // String myMessage = new String("Secret Message");
                                 // Encrypt that message using a new SealedObject and the Cipher we created before
                                 SealedObject myEncryptedMessage= new SealedObject( input, c);
                                 //End Start RSA encrypt
-
+                                //String cipherText=(String) myEncryptedMessage;
+                                System.out.println(myEncryptedMessage);
+                                //out.println(myEncryptedMessage);
+                                //out.flush();
                                 //Start RSA decrypt
                                 // Get an instance of the Cipher for RSA encryption/decryption
                                 Cipher dec = Cipher.getInstance("RSA");
                                 // Initiate the Cipher, telling it that it is going to Decrypt, giving it the private key
-                                dec.init(Cipher.DECRYPT_MODE, myPair.getPrivate());
+                                dec.init(Cipher.DECRYPT_MODE, myPair.getPublic());
                                 
                                 // Tell the SealedObject we created before to decrypt the data and return it
                                 String message = (String) myEncryptedMessage.getObject(dec);
-                                System.out.println("foo = "+message);
+                                System.out.println("foo = "+myPair.getPublic());
                                 //End RSA decrypt
 
                                 //

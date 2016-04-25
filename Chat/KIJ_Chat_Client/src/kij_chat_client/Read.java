@@ -3,6 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+/*
+    Buat nerima input dari socket.in
+    dari inet cok
+*/
 package kij_chat_client;
 
 /*import java.net.Socket;*/
@@ -19,11 +23,13 @@ public class Read implements Runnable {
         String input;
         boolean keepGoing = true;
         ArrayList<String> log;
+        Client father;
 	
-	public Read(Scanner in, ArrayList<String> log)
+	public Read(Scanner in, ArrayList<String> log,Client father)
 	{
 		this.in = in;
                 this.log = log;
+                this.father=father;
 	}
     
         @Override
@@ -43,6 +49,7 @@ public class Read implements Runnable {
                                             } else if (input.split(" ")[1].toLowerCase().equals("login")) {
                                                 log.clear();
                                                 log.add("true");
+                                                father.hasLogin();
                                             }
                                         }
                                         
