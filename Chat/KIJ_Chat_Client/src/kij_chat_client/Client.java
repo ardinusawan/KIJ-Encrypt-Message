@@ -20,6 +20,7 @@ public class Client implements Runnable {
 	private Socket socket;//MAKE SOCKET INSTANCE VARIABLE
         public boolean hasLogin=false;
         PrintWriter out;
+        KeyPair myPair ;
         
         // use arraylist -> arraylist dapat diparsing as reference
         volatile ArrayList<String> log = new ArrayList<>();
@@ -80,8 +81,9 @@ public class Client implements Runnable {
                 KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
                 // Generate the keys — might take sometime on slow computers
                 KeyPair myPair = kpg.generateKeyPair();
-                
-                out.println("publicKey "+myPair.getPublic());
+                this.out.println("publickey "+myPair.getPublic());
+                this.out.flush();
+                System.out.println("Public key Saya Adalah "+myPair.getPublic());
                 //ngirim public key
             } catch (NoSuchAlgorithmException ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);

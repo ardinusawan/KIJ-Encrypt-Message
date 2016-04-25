@@ -20,8 +20,9 @@ public class PublicKey {
     PublicKey() {
     }
     
-    public void addPublicKey(String ID,String publicKey){
+    public void addPublicKey(String ID,String publicKey,ArrayList<Pair<String,String>> _publicKey){
         _publicKey.add(new Pair(ID, publicKey));
+        this._publicKey.add(new Pair(ID, publicKey));
     }
     public ArrayList<Pair<String,String>> getPublicKey(){
         return _publicKey;

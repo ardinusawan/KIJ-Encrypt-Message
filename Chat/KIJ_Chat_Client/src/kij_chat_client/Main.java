@@ -2,7 +2,9 @@ package kij_chat_client;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import static javafx.application.Platform.exit;
+import javafx.util.Pair;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -13,6 +15,7 @@ public class Main {
 
 	private final static int PORT = 6677;//SET A CONSTANT VARIABLE PORT
 	private final static String HOST = "localhost";//SET A CONSTANT VARIABLE HOST
+        public static final ArrayList<Pair<String,String>> _publicKey = new ArrayList<>();
 	
 	public static void main(String[] args) throws IOException
 	{

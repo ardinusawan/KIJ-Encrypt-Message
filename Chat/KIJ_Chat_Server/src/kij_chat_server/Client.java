@@ -22,14 +22,16 @@ public class Client implements Runnable{
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
+        private ArrayList<Pair<String,String>> _publicKey;
+        private ArrayList<Client> clientList;
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist)
+	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, ArrayList<Pair<String,String>> _publicKey)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
-                //this.father=fatherInput;
+                this._publicKey=_publicKey;
 	}
 	
 	@Override
@@ -94,13 +96,17 @@ public class Client implements Runnable{
                                         }
                                         
                                         //public Key
-//                                        if (input.split(" ")[0].toLowerCase().equals("publicKey") == true) {
-//                                            String[] vals = input.split(" ");
-//                                            
-//                                            if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
-//                                                father.publicKey.addPublicKey(this.username,vals[1]);
-//                                            } 
-//                                        }
+                                        if (input.split(" ")[0].toLowerCase().equals("publickey") == true) {
+                                            String keyTmp= input.substring(input.indexOf(' ')+1);
+                                            System.out.println("Ada yang ngirim public key looh");
+                                            PublicKey publicKey = new PublicKey();
+                                            publicKey.addPublicKey(this.username,keyTmp,_publicKey);
+                                              
+                                              for (Pair<String, String> selGroup : _publicKey) {
+                                                  System.out.println(selGroup.getFirst()+" "+selGroup.getSecond());
+                                              }
+                                                
+                                        }
                                         
                                         // param PM <userName dst> <message>
                                         if (input.split(" ")[0].toLowerCase().equals("pm") == true) {

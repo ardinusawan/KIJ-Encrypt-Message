@@ -84,7 +84,7 @@ public class Write implements Runnable {
                                 
                                 // Tell the SealedObject we created before to decrypt the data and return it
                                 String message = (String) myEncryptedMessage.getObject(dec);
-                                System.out.println("foo = "+myPair.getPublic());
+                                System.out.println("foo = "+message);
                                 //End RSA decrypt
 
                                 //

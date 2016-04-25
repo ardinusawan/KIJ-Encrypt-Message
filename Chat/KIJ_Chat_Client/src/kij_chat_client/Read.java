@@ -10,8 +10,13 @@
 package kij_chat_client;
 
 /*import java.net.Socket;*/
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -36,30 +41,44 @@ public class Read implements Runnable {
 	public void run()//INHERIT THE RUN METHOD FROM THE Runnable INTERFACE
 	{
 		try
-		{
-			while (keepGoing)//WHILE THE PROGRAM IS RUNNING
-			{						
-				if(this.in.hasNext()) {
-                                                                   //IF THE SERVER SENT US SOMETHING
-                                        input = this.in.nextLine();
-					System.out.println(input);//PRINT IT OUT
-                                        if (input.split(" ")[0].toLowerCase().equals("success")) {
-                                            if (input.split(" ")[1].toLowerCase().equals("logout")) {
-                                                keepGoing = false;
-                                            } else if (input.split(" ")[1].toLowerCase().equals("login")) {
-                                                log.clear();
-                                                log.add("true");
-                                                father.hasLogin();
-                                            }
-                                        }
-                                        
+                    //INHERIT THE RUN METHOD FROM THE Runnable INTERFACE
+                {
+                    //Start RSA encrypt
+                    // Get an instance of the RSA key generator
+                    KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+                    // Generate the keys — might take sometime on slow computers
+                    KeyPair myPair = kpg.generateKeyPair();
+                    try
+                    {
+                        while (keepGoing)//WHILE THE PROGRAM IS RUNNING
+                        {
+                            if(this.in.hasNext()) {
+                                //IF THE SERVER SENT US SOMETHING
+                                input = this.in.nextLine();
+                                System.out.println(input);//PRINT IT OUT
+                                if (input.split(" ")[0].toLowerCase().equals("success")) {
+                                    if (input.split(" ")[1].toLowerCase().equals("logout")) {
+                                        keepGoing = false;
+                                    } else if (input.split(" ")[1].toLowerCase().equals("login")) {
+                                        log.clear();
+                                        log.add("true");
+                                        father.myPair=myPair;
+                                        father.hasLogin();
+                                    }
                                 }
                                 
-			}
-		}
-		catch (Exception e)
+                            }
+                            
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();//MOST LIKELY WONT BE AN ERROR, GOOD PRACTICE TO CATCH THOUGH
+                    }
+                }
+		catch (NoSuchAlgorithmException ex)
 		{
-			e.printStackTrace();//MOST LIKELY WONT BE AN ERROR, GOOD PRACTICE TO CATCH THOUGH
+			Logger.getLogger(Read.class.getName()).log(Level.SEVERE, null, ex);
 		} 
 	}
 }
