@@ -7,6 +7,7 @@ package kij_chat_client;
 
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -36,7 +37,17 @@ public class Write implements Runnable {
 			while (keepGoing)//WHILE THE PROGRAM IS RUNNING
 			{						
 				String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
-				out.println(input);//SEND IT TO THE SERVER
+				//Hash
+                                
+                                //int hashCode = input.hashCode();
+                                //System.out.println("input hash code = " + hashCode);
+                                
+                                MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+                                messageDigest.update(input.getBytes());
+                                String encryptedString = new String(messageDigest.digest());
+                                System.out.println(encryptedString); //print hash
+                                //
+                                out.println(input);//SEND IT TO THE SERVER
 				out.flush();//FLUSH THE STREAM
                                 
                                 if (input.contains("logout")) {
