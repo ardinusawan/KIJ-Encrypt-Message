@@ -96,9 +96,12 @@ public class Write implements Runnable {
                                     System.out.println("kirim plaintext");    
                                     out.writeObject(input);//SEND IT TO THE SERVER
                                     out.flush();//FLUSH THE STREAM
-                                    flag=1;
+                                    //flag=1;
                                 }
                                 else{
+                                    /*
+                                    RSA Encrypt
+                                    
                                     // Get an instance of the Cipher for RSA encryption/decryption
                                     Cipher c = Cipher.getInstance("RSA");
                                     // Initiate the Cipher, telling it that it is going to Encrypt, giving it the public key
@@ -114,6 +117,7 @@ public class Write implements Runnable {
                                     System.out.println("kirim cipher");
                                     out.writeObject(myEncryptedMessage);//SEND IT TO THE SERVER 
                                     out.flush();
+                                    */
                                 }
                                 if (input.contains("logout")) {
                                     if (log.contains("true"))

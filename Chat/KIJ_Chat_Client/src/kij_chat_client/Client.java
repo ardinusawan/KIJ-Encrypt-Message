@@ -33,6 +33,7 @@ public class Client implements Runnable {
         ObjectInputStream in;
         KeyPair myPair ;
         PrivateKey privateKey;
+        ArrayList<Pair<String,PublicKey>> _publicKey;
         
         // use arraylist -> arraylist dapat diparsing as reference
         volatile ArrayList<String> log = new ArrayList<>();
@@ -51,6 +52,7 @@ public class Client implements Runnable {
 			Scanner chat = new Scanner(System.in);//GET THE INPUT FROM THE CMD
 			in = new ObjectInputStream(socket.getInputStream());//GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
 			out = new ObjectOutputStream(socket.getOutputStream());//GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
+                        _publicKey=new ArrayList();
 			
 //			while (true)//WHILE THE PROGRAM IS RUNNING
 //			{						
@@ -62,7 +64,7 @@ public class Client implements Runnable {
 //					System.out.println(in.nextLine());//PRINT IT OUT
 //			}
                         
-                        Read reader = new Read(in, log,this); //socket.in
+                        Read reader = new Read(in, out, log,this,_publicKey); //socket.in
 			
 			Thread tr = new Thread(reader);
 			tr.start();
@@ -101,16 +103,13 @@ public class Client implements Runnable {
                 // Send the public key bytes to the other party...
                 this.out.writeObject("publickey");
                 this.out.flush();
-                this.in.readObject();
+                //this.in.readObject();
                 
                 this.out.writeObject(publicKey);
                 this.out.flush();
-                //System.out.println("String Public key Saya Adalah "+publicKey);
                 System.out.println("Public key Saya Adalah "+publicKey);
                 //ngirim public key
             } catch (NoSuchAlgorithmException ex) {
-                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ClassNotFoundException ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             } 
         }
