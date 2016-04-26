@@ -1,14 +1,24 @@
 package kij_chat_client;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.bind.DatatypeConverter;
+import sun.misc.BASE64Encoder;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -19,8 +29,10 @@ public class Client implements Runnable {
 
 	private Socket socket;//MAKE SOCKET INSTANCE VARIABLE
         public boolean hasLogin=false;
-        PrintWriter out;
+        ObjectOutputStream out;
+        ObjectInputStream in;
         KeyPair myPair ;
+        PrivateKey privateKey;
         
         // use arraylist -> arraylist dapat diparsing as reference
         volatile ArrayList<String> log = new ArrayList<>();
@@ -37,8 +49,8 @@ public class Client implements Runnable {
 		try
 		{
 			Scanner chat = new Scanner(System.in);//GET THE INPUT FROM THE CMD
-			Scanner in = new Scanner(socket.getInputStream());//GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
-			out = new PrintWriter(socket.getOutputStream());//GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
+			in = new ObjectInputStream(socket.getInputStream());//GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
+			out = new ObjectOutputStream(socket.getOutputStream());//GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
 			
 //			while (true)//WHILE THE PROGRAM IS RUNNING
 //			{						
@@ -55,7 +67,7 @@ public class Client implements Runnable {
 			Thread tr = new Thread(reader);
 			tr.start();
                         
-                        Write writer = new Write(chat, out, log);//socket.out
+                        Write writer = new Write(chat, out, log,this);//socket.out
 			
 			Thread tw = new Thread(writer);
 			tw.start();
@@ -73,7 +85,7 @@ public class Client implements Runnable {
 		} 
 	}
         
-        public void hasLogin(){
+        public void hasLogin() throws IOException{
             try {
                 this.hasLogin=true;
                 //Start RSA encrypt
@@ -81,13 +93,26 @@ public class Client implements Runnable {
                 KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
                 // Generate the keys — might take sometime on slow computers
                 KeyPair myPair = kpg.generateKeyPair();
-                this.out.println("publickey "+myPair.getPublic());
+                
+                PublicKey publicKey = myPair.getPublic();
+                privateKey = myPair.getPrivate();
+                //dari http://janiths-codes.blogspot.co.id/2009/11/how-to-convert-publickey-as-string-and.html
+                
+                // Send the public key bytes to the other party...
+                this.out.writeObject("publickey");
                 this.out.flush();
-                System.out.println("Public key Saya Adalah "+myPair.getPublic());
+                this.in.readObject();
+                
+                this.out.writeObject(publicKey);
+                this.out.flush();
+                //System.out.println("String Public key Saya Adalah "+publicKey);
+                System.out.println("Public key Saya Adalah "+publicKey);
                 //ngirim public key
             } catch (NoSuchAlgorithmException ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            } 
         }
 
 }

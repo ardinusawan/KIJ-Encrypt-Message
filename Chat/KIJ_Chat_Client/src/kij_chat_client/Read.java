@@ -10,6 +10,7 @@
 package kij_chat_client;
 
 /*import java.net.Socket;*/
+import java.io.ObjectInputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -24,13 +25,13 @@ import java.util.logging.Logger;
  */
 public class Read implements Runnable {
         
-        private Scanner in;//MAKE SOCKET INSTANCE VARIABLE
+        private ObjectInputStream in;//MAKE SOCKET INSTANCE VARIABLE
         String input;
         boolean keepGoing = true;
         ArrayList<String> log;
         Client father;
 	
-	public Read(Scanner in, ArrayList<String> log,Client father)
+	public Read(ObjectInputStream in, ArrayList<String> log,Client father)
 	{
 		this.in = in;
                 this.log = log;
@@ -52,9 +53,11 @@ public class Read implements Runnable {
                     {
                         while (keepGoing)//WHILE THE PROGRAM IS RUNNING
                         {
-                            if(this.in.hasNext()) {
+                            Object inputObject= in.readObject();
+                            if(inputObject!=null) {
+                                input=(String)inputObject;
                                 //IF THE SERVER SENT US SOMETHING
-                                input = this.in.nextLine();
+                                //input = this.in.nextLine();
                                 System.out.println(input);//PRINT IT OUT
                                 if (input.split(" ")[0].toLowerCase().equals("success")) {
                                     if (input.split(" ")[1].toLowerCase().equals("logout")) {

@@ -1,9 +1,19 @@
 package kij_chat_server;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.crypto.Cipher;
+import javax.crypto.SealedObject;
+import javax.xml.bind.DatatypeConverter;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -17,15 +27,17 @@ public class Client implements Runnable{
         private String username;
         private boolean login = false;
         private boolean hasLogin=false;
+        private int count=0;
+        private String keyTmp;
         //Main father;
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
-        private ArrayList<Pair<String,String>> _publicKey;
-        private ArrayList<Client> clientList;
+        private ArrayList<Pair<String,PublicKey>> _publicKey;
+        //private ArrayList<Client> clientList;
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, ArrayList<Pair<String,String>> _publicKey)
+	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, ArrayList<Pair<String,PublicKey>> _publicKey)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
@@ -39,18 +51,21 @@ public class Client implements Runnable{
 	{
 		try //HAVE TO HAVE THIS FOR THE in AND out VARIABLES
 		{
-			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
-			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
-			
+			//Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
+			//PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                        
 			while (true)//WHILE THE PROGRAM IS RUNNING
 			{		
-				if (in.hasNext())
+                                Object inputTmp=ois.readObject();
+				if (inputTmp!=null)
 				{
-					String input = in.nextLine();//IF THERE IS INPUT THEN MAKE A NEW VARIABLE input AND READ WHAT THEY TYPED
+					String input = (String) inputTmp;//IF THERE IS INPUT THEN MAKE A NEW VARIABLE input AND READ WHAT THEY TYPED
 //					System.out.println("Client Said: " + input);//PRINT IT OUT TO THE SCREEN
 //					out.println("You Said: " + input);//RESEND IT TO THE CLIENT
 //					out.flush();//FLUSH THE STREAM
-                                        System.out.println(input);
+                                        System.out.println("Receiving ="+input);
                                         // param LOGIN <userName> <pass>
                                         if (input.split(" ")[0].toLowerCase().equals("login") == true) {
                                             String[] vals = input.split(" ");
@@ -66,14 +81,14 @@ public class Client implements Runnable{
                                                     this.username = vals[1];
                                                     this.login = true;
                                                     System.out.println("Users count: " + this._loginlist.size());
-                                                    out.println("SUCCESS login");
+                                                    out.writeObject("SUCCESS login");
                                                     out.flush();
                                                 } else {
-                                                    out.println("FAIL login");
+                                                    out.writeObject("FAIL login");
                                                     out.flush();
                                                 }
                                             } else {
-                                                out.println("FAIL login");
+                                                out.writeObject("FAIL login");
                                                 out.flush();
                                             }
                                         }
@@ -85,27 +100,38 @@ public class Client implements Runnable{
                                             if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
                                                 this._loginlist.remove(new Pair(this.socket, this.username));
                                                 System.out.println(this._loginlist.size());
-                                                out.println("SUCCESS logout");
+                                                out.writeObject("SUCCESS logout");
                                                 out.flush();
                                                 this.socket.close();
                                                 break;
                                             } else {
-                                                out.println("FAIL logout");
+                                                out.writeObject("FAIL logout");
                                                 out.flush();
                                             }
                                         }
                                         
                                         //public Key
-                                        if (input.split(" ")[0].toLowerCase().equals("publickey") == true) {
-                                            String keyTmp= input.substring(input.indexOf(' ')+1);
-                                            System.out.println("Ada yang ngirim public key looh");
-                                            PublicKey publicKey = new PublicKey();
-                                            publicKey.addPublicKey(this.username,keyTmp,_publicKey);
-                                              
-                                              for (Pair<String, String> selGroup : _publicKey) {
-                                                  System.out.println(selGroup.getFirst()+" "+selGroup.getSecond());
-                                              }
-                                                
+                                        if (input.split(" ")[0].toLowerCase().equals("publickey") == true ) {
+                                            out.writeObject("ok");
+                                            Object inputObject = ois.readObject();
+                                            PublicKey publicKey = (PublicKey) inputObject;
+                                            System.out.println(publicKey);
+                                            _publicKey.add(new Pair(this.username,publicKey));
+                                            Object inputObject2 = ois.readObject();
+                                            SealedObject cipherText = (SealedObject)inputObject2;
+                                            System.out.println(cipherText);
+                                            System.out.println(inputObject2);
+                                            //Start RSA decrypt
+                                            // Get an instance of the Cipher for RSA encryption/decryption
+                                            Cipher dec = Cipher.getInstance("RSA");
+                                            // Initiate the Cipher, telling it that it is going to Decrypt, giving it the private key
+                                            dec.init(Cipher.DECRYPT_MODE, publicKey);
+
+                                            // Tell the SealedObject we created before to decrypt the data and return it
+                                            String message = (String) cipherText.getObject(dec);
+                                            System.out.println("foo = "+message);
+                                            //End RSA decrypt
+                                            
                                         }
                                         
                                         // param PM <userName dst> <message>
@@ -116,13 +142,13 @@ public class Client implements Runnable{
                                             
                                             for(Pair<Socket, String> cur : _loginlist) {
                                                 if (cur.getSecond().equals(vals[1])) {
-                                                    PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
+                                                    ObjectOutputStream outDest = new ObjectOutputStream(cur.getFirst().getOutputStream());
                                                     String messageOut = "";
                                                     for (int j = 2; j<vals.length; j++) {
                                                         messageOut += vals[j] + " ";
                                                     }
                                                     System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
-                                                    outDest.println(this.username + ": " + messageOut);
+                                                    outDest.writeObject(this.username + ": " + messageOut);
                                                     outDest.flush();
                                                     exist = true;
                                                 }
@@ -130,7 +156,7 @@ public class Client implements Runnable{
                                             
                                             if (exist == false) {
                                                 System.out.println("pm to " + vals[1] + " by " + this.username + " failed.");
-                                                out.println("FAIL pm");
+                                                out.writeObject("FAIL pm");
                                                 out.flush();
                                             }
                                         }
@@ -152,11 +178,11 @@ public class Client implements Runnable{
                                                 int total = group.updateGroup(vals[1], this.username, _grouplist);
                                                 System.out.println("total group: " + total);
                                                 System.out.println("cg " + vals[1] + " by " + this.username + " successed.");
-                                                out.println("SUCCESS cg");
+                                                out.writeObject("SUCCESS cg");
                                                 out.flush();
                                             } else {
                                                 System.out.println("cg " + vals[1] + " by " + this.username + " failed.");
-                                                out.println("FAIL cg");
+                                                out.writeObject("FAIL cg");
                                                 out.flush();
                                             }
                                         }
@@ -192,7 +218,7 @@ public class Client implements Runnable{
                                                 }
                                             } else {
                                                 System.out.println("gm to " + vals[1] + " by " + this.username + " failed.");
-                                                out.println("FAIL gm");
+                                                out.writeObject("FAIL gm");
                                                 out.flush();
                                             }
                                         }

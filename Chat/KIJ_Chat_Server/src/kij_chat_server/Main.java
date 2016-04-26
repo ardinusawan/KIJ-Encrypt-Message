@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
@@ -18,8 +19,8 @@ public class Main {
     public static final ArrayList<Pair<String,String>> _userlist = user.getUserList();
     public static final Group group = new Group();
     public static final ArrayList<Pair<String,String>> _grouplist = group.getGroupList();
-    public static final PublicKey publicKey= new PublicKey();
-    public static final ArrayList<Pair<String,String>> _publicKey = publicKey.getPublicKey();
+    public static final PublicKeyList publicKey= new PublicKeyList();
+    public static final ArrayList<Pair<String,PublicKey>> _publicKey = publicKey.getPublicKey();
 
 	public static void main(String[] args) throws IOException {
 		try 
