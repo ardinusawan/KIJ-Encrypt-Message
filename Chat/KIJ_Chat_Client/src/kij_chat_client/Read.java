@@ -17,9 +17,10 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.Cipher;
+import javax.crypto.SealedObject;
 
 /**
  *
@@ -70,18 +71,24 @@ public class Read implements Runnable {
                                         log.add("true");
                                         father.myPair=myPair;
                                         father.hasLogin();
-                                        out.writeObject("klol");
+                                        //out.writeObject("klol");
                                     }
                                 }
                                 else if (input.split(" ")[0].toLowerCase().equals("publickey")) {
                                     if (input.split(" ")[1].toLowerCase().equals("add")) {
-                                        String ID=input.split(" ")[1];
+                                        String ID=input.split(" ")[2];
                                         inputObject= in.readObject();
                                         PublicKey publicKey=(PublicKey)inputObject;
                                         _publicKey.add(new Pair(ID,publicKey));
+                                        //
+                                        for(Pair<String,PublicKey>iter:_publicKey){
+                                            System.out.println(iter.getFirst());
+                                            System.out.println(iter.getSecond());
+                                        }
+                                        System.out.println("done adding this round");
                                     }
                                     else if (input.split(" ")[1].toLowerCase().equals("remove")) {
-                                        String ID=input.split(" ")[1];
+                                        String ID=input.split(" ")[2];
                                         inputObject= in.readObject();
                                         PublicKey publicKey=(PublicKey)inputObject;
                                         for(Pair<String,PublicKey> iter: _publicKey){
@@ -90,9 +97,29 @@ public class Read implements Runnable {
                                                break;
                                             }
                                         }
+                                        for(Pair<String,PublicKey>iter:_publicKey){
+                                            System.out.println(iter.getFirst());
+                                            System.out.println(iter.getSecond());
+                                        }
+                                        System.out.println("done removing this round");
                                     }
                                 }
+                                else if (input.toLowerCase().equals("fail login")) {
+                                }
                                 else{
+                                    //System.out.println(input);
+                                    inputObject= in.readObject();
+                                    SealedObject encryptedMessage = (SealedObject)inputObject;
+                                    System.out.println(encryptedMessage);
+                                    String ID = input.split(" ")[0];
+                                    
+                                    // Get an instance of the Cipher for RSA encryption/decryption
+                                    Cipher dec = Cipher.getInstance("RSA");
+                                    // Initiate the Cipher, telling it that it is going to Decrypt, giving it the private key
+                                    dec.init(Cipher.DECRYPT_MODE, father.privateKey);
+                                    // Tell the SealedObject we created before to decrypt the data and return it
+                                    String message = (String) encryptedMessage.getObject(dec);
+                                    System.out.println(ID+" decrypted message: "+message);
                                 }
                             }
                             

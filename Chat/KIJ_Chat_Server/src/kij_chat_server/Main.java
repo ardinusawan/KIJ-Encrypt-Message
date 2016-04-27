@@ -21,6 +21,7 @@ public class Main {
     public static final ArrayList<Pair<String,String>> _grouplist = group.getGroupList();
     public static final PublicKeyList publicKey= new PublicKeyList();
     public static final ArrayList<Pair<String,PublicKey>> _publicKey = publicKey.getPublicKey();
+    public static final ArrayList<Client> clientList = new ArrayList<>();
 
 	public static void main(String[] args) throws IOException {
 		try 
@@ -35,7 +36,11 @@ public class Main {
 				
 				System.out.println("Client connected from " + s.getLocalAddress().getHostName());	//	TELL THEM THAT THE CLIENT CONNECTED
 				
-				Client chat = new Client(s, _loginlist, _userlist, _grouplist,_publicKey);//CREATE A NEW CLIENT OBJECT
+				Client chat ;
+                                chat = new Client(s, _loginlist, _userlist, _grouplist,_publicKey, clientList);//CREATE A NEW CLIENT OBJECT
+                                synchronized(clientList) {
+                                    clientList.add(chat);
+                                }
 				Thread t = new Thread(chat);//MAKE A NEW THREAD
 				t.start();//START THE THREAD
 			}
@@ -46,6 +51,9 @@ public class Main {
                         e.printStackTrace();
 		}
 	}
+        public void go(){
+            
+        }
 
 }
 

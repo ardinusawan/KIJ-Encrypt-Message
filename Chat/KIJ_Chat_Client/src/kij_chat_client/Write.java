@@ -9,20 +9,11 @@
 package kij_chat_client;
 
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Scanner;
 import javax.crypto.Cipher;
 import javax.crypto.SealedObject;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  *
@@ -36,13 +27,17 @@ public class Write implements Runnable {
         ArrayList<String> log;
 	int flag=0;
         Client father;
+        ArrayList<Pair<String,PublicKey>> _publicKey;
+        String ID;
+        PublicKey publicKey = null;
         
-	public Write(Scanner chat, ObjectOutputStream out, ArrayList<String> log,Client father)
+	public Write(Scanner chat, ObjectOutputStream out, ArrayList<String> log,Client father, ArrayList<Pair<String,PublicKey>> _publicKey)
 	{
 		this.chat = chat;
                 this.out = out;
                 this.log = log;
                 this.father = father;
+                this._publicKey=_publicKey;
 	}
 	
 	@Override
@@ -53,18 +48,7 @@ public class Write implements Runnable {
 			while (keepGoing)//WHILE THE PROGRAM IS RUNNING
 			{						
 				String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
-				//Start Hash
-                                
-                                //int hashCode = input.hashCode();
-                                //System.out.println("input hash code = " + hashCode);
-                                
-                                MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-                                messageDigest.update(input.getBytes());
-                                String hashedString = new String(messageDigest.digest());
-                                System.out.println(hashedString); //print hash
-                                //End Hash
-                                //input=input+hashedString;//msg+hash
-                                
+                              
                                 //Start RSA encrypt
                                 // Get an instance of the RSA key generator
                                 //KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
@@ -90,22 +74,52 @@ public class Write implements Runnable {
 //                                System.out.println("foo = "+message);
 //                                //End RSA decrypt
 
-                                //
+                               
                                 
                                 if(flag==0){
-                                    System.out.println("kirim plaintext");    
-                                    out.writeObject(input);//SEND IT TO THE SERVER
-                                    out.flush();//FLUSH THE STREAM
-                                    //flag=1;
+                                    System.out.println("kirim plaintext");
+                                    if(input.startsWith("gm"))//broadcast gausah
+                                    {
+                                        flag=1;  
+                                        ID=input.split(" ")[1];
+                                    }
+                                    else if(input.startsWith("pm")){
+                                        flag=1;  
+                                        ID=input.split(" ")[1];
+                                        boolean notFound=true;
+                                        for(Pair<String,PublicKey>iter:_publicKey){
+                                            if(iter.getFirst().equals(ID))
+                                            {
+                                                publicKey=iter.getSecond();
+                                                notFound=false;
+                                                break;
+                                            }
+                                        }
+                                        if(notFound){
+                                            System.out.println("Destination ID not found or offline");
+                                            flag=0;
+                                            continue;
+                                        }
+                                        else{
+                                            out.writeObject(input);//SEND IT TO THE SERVER
+                                            out.flush();//FLUSH THE STREAM
+                                        }
+                                    }
+                                    else{
+                                        out.writeObject(input);//SEND IT TO THE SERVER
+                                        out.flush();//FLUSH THE STREAM  
+                                    }
+                                        
                                 }
                                 else{
-                                    /*
-                                    RSA Encrypt
+                                    
+                                    //RSA Encrypt
+                                    
                                     
                                     // Get an instance of the Cipher for RSA encryption/decryption
                                     Cipher c = Cipher.getInstance("RSA");
                                     // Initiate the Cipher, telling it that it is going to Encrypt, giving it the public key
-                                    c.init(Cipher.ENCRYPT_MODE, father.privateKey); 
+                                    c.init(Cipher.ENCRYPT_MODE, publicKey); 
 
                                     // Create a secret message
                                     // String myMessage = new String("Secret Message");
@@ -117,7 +131,7 @@ public class Write implements Runnable {
                                     System.out.println("kirim cipher");
                                     out.writeObject(myEncryptedMessage);//SEND IT TO THE SERVER 
                                     out.flush();
-                                    */
+                                    flag=0;
                                 }
                                 if (input.contains("logout")) {
                                     if (log.contains("true"))

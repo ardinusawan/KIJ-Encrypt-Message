@@ -36,18 +36,22 @@ public class Client implements Runnable{
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
         private ArrayList<Pair<String,PublicKey>> _publicKey;
+        private ArrayList<Client> clientList;
         ObjectOutputStream out;
         ObjectInputStream ois;
-        //private ArrayList<Client> clientList;
-	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, ArrayList<Pair<String,PublicKey>> _publicKey)
+        
+	public Client(Socket s, ArrayList<Pair<Socket, String>> _loginlist, ArrayList<Pair<String, String>> _userlist, 
+                ArrayList<Pair<String, String>> _grouplist, ArrayList<Pair<String, PublicKey>> _publicKey, ArrayList<Client> clientList)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
                 this._publicKey=_publicKey;
+                this.clientList=clientList;
 	}
+
+    
 	
 	@Override
 	public void run() //(IMPLEMENTED FROM THE RUNNABLE INTERFACE)
@@ -109,6 +113,7 @@ public class Client implements Runnable{
                                                 out.writeObject("SUCCESS logout");
                                                 out.flush();
                                                 login=false;
+                                                clientList.remove(this);
                                             } else {
                                                 out.writeObject("FAIL logout");
                                                 out.flush();
@@ -138,52 +143,47 @@ public class Client implements Runnable{
                                             Object inputObject = ois.readObject();
                                             PublicKey publicKey = (PublicKey) inputObject;
                                             System.out.println(publicKey);
+                                            justLoggedIn();
                                             _publicKey.add(new Pair(this.username,publicKey));
                                             broadcastPublicKey(this.username, publicKey);
-                                            broadcastPublicKey(this.username,publicKey);
                                             for(Pair<String,PublicKey> iter:_publicKey){
                                                 System.out.println(iter.getFirst());
                                                 System.out.println(iter.getSecond());
                                                 System.out.println("another key?");
                                             }
-                                            /*
-                                            Message retreival and decryption
-                                            
-                                            Object inputObject2 = ois.readObject();
-                                            SealedObject cipherText = (SealedObject)inputObject2;
-                                            System.out.println(cipherText);
-                                            System.out.println(inputObject2);
-                                            //Start RSA decrypt
-                                            // Get an instance of the Cipher for RSA encryption/decryption
-                                            Cipher dec = Cipher.getInstance("RSA");
-                                            // Initiate the Cipher, telling it that it is going to Decrypt, giving it the private key
-                                            dec.init(Cipher.DECRYPT_MODE, publicKey);
-
-                                            // Tell the SealedObject we created before to decrypt the data and return it
-                                            String message = (String) cipherText.getObject(dec);
-                                            System.out.println("foo = "+message);
-                                            //End RSA decrypt
-                                                    */
-                                            
                                         }
                                         
                                         // param PM <userName dst> <message>
                                         if (input.split(" ")[0].toLowerCase().equals("pm") == true) {
+                                            Object inputObject;
+                                            synchronized(ois){ //biar langsung dobel
+                                                inputObject = ois.readObject();  
+                                            }
                                             String[] vals = input.split(" ");
                                             
+                                            Client destination = null;
                                             boolean exist = false;
                                             
                                             for(Pair<Socket, String> cur : _loginlist) {
                                                 if (cur.getSecond().equals(vals[1])) {
-                                                    ObjectOutputStream outDest = new ObjectOutputStream(cur.getFirst().getOutputStream());
+                                                    //ObjectOutputStream outDest = new ObjectOutputStream(cur.getFirst().getOutputStream());   ///////IKI COK SING BERMASALAH
+                                                    for(Client iter:clientList)
+                                                    {
+                                                        if(iter.username.equals(cur.getSecond())){
+                                                            destination=iter;
+                                                            exist=true;
+                                                            break;      
+                                                        }
+                                                    }
                                                     String messageOut = "";
                                                     for (int j = 2; j<vals.length; j++) {
                                                         messageOut += vals[j] + " ";
                                                     }
-                                                    System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
-                                                    outDest.writeObject(this.username + ": " + messageOut);
-                                                    outDest.flush();
-                                                    exist = true;
+                                                    System.out.println(this.username + " messaged " + vals[1]);
+                                                    if(exist){
+                                                        destination.sendToClient(this.username + " : ");
+                                                        destination.sendToClient(inputObject);
+                                                    }
                                                 }
                                             }
                                             
@@ -192,6 +192,7 @@ public class Client implements Runnable{
                                                 out.writeObject("FAIL pm");
                                                 out.flush();
                                             }
+                                            
                                         }
                                         
                                         // param CG <groupName>
@@ -259,17 +260,14 @@ public class Client implements Runnable{
                                         // param BM <message>
                                         if (input.split(" ")[0].toLowerCase().equals("bm") == true) {
                                             String[] vals = input.split(" ");
-                                            
-                                            for(Pair<Socket, String> cur : _loginlist) {
-                                                if (!cur.getFirst().equals(socket)) {
-                                                    ObjectOutputStream outDest = new ObjectOutputStream(cur.getFirst().getOutputStream());
-                                                    String messageOut = "";
-                                                    for (int j = 1; j<vals.length; j++) {
-                                                        messageOut += vals[j] + " ";
-                                                    }
-                                                    System.out.println(this.username + " to alls: " + messageOut);
-                                                    outDest.writeObject(this.username + " <BROADCAST>: " + messageOut);
-                                                    outDest.flush();
+                                            String messageOut = "";
+                                            for (int j = 1; j<vals.length; j++) {
+                                                messageOut += vals[j] + " ";
+                                            }
+                                            for(Client iter:clientList){
+                                                if(iter.username.equals(this.username)){}
+                                                else{
+                                                    iter.sendToClient(this.username + " <BROADCAST>: " + messageOut);
                                                 }
                                             }
                                         }
@@ -284,22 +282,36 @@ public class Client implements Runnable{
         
         public void broadcastPublicKey(String ID,PublicKey key) throws IOException
         {
-            for(Pair<Socket,String>iter: _loginlist){
-                ObjectOutputStream outDest = new ObjectOutputStream(iter.getFirst().getOutputStream());
-                outDest.writeObject("publicKey add "+ID);
-                outDest.flush();
-                outDest.writeObject(key);
-                outDest.flush();
+            for(Client iter:clientList){
+                if(iter!=null){
+                    if(iter.username.equals(this.username)){}
+                    else{
+                        iter.sendToClient("publicKey Add "+ ID);
+                        iter.sendToClient(key);
+                    }
+                }
             }
         }
         public void removePublicKey(String ID,PublicKey key) throws IOException
         {
-            for(Pair<Socket,String>iter: _loginlist){
-                ObjectOutputStream outDest = new ObjectOutputStream(iter.getFirst().getOutputStream());
-                outDest.writeObject("publicKey remove "+ID);
-                outDest.flush();
-                outDest.writeObject(key);
-                outDest.flush();
+            for(Client iter:clientList){
+                if(iter!=null){
+                    if(iter.username.equals(this.username)){}
+                    else{
+                        iter.sendToClient("publicKey remove "+ ID);
+                        iter.sendToClient(key);
+                    }
+                }
+            }
+        }
+        public void sendToClient(Object object) throws IOException{
+            out.writeObject(object);
+            out.flush();
+        }
+        public void justLoggedIn() throws IOException{
+            for(Pair<String,PublicKey> iter:_publicKey){
+                this.sendToClient("publicKey Add "+ iter.getFirst());
+                this.sendToClient(iter.getSecond());
             }
         }
 

@@ -69,7 +69,7 @@ public class Client implements Runnable {
 			Thread tr = new Thread(reader);
 			tr.start();
                         
-                        Write writer = new Write(chat, out, log,this);//socket.out
+                        Write writer = new Write(chat, out, log,this,_publicKey);//socket.out
 			
 			Thread tw = new Thread(writer);
 			tw.start();
@@ -97,7 +97,7 @@ public class Client implements Runnable {
                 KeyPair myPair = kpg.generateKeyPair();
                 
                 PublicKey publicKey = myPair.getPublic();
-                privateKey = myPair.getPrivate();
+                this.privateKey = myPair.getPrivate();
                 //dari http://janiths-codes.blogspot.co.id/2009/11/how-to-convert-publickey-as-string-and.html
                 
                 // Send the public key bytes to the other party...
