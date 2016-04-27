@@ -62,7 +62,7 @@ public class Read implements Runnable {
                                 input=(String)inputObject;
                                 //IF THE SERVER SENT US SOMETHING
                                 //input = this.in.nextLine();
-                                System.out.println(input);//PRINT IT OUT
+                                //System.out.println(input);//PRINT IT OUT
                                 if (input.split(" ")[0].toLowerCase().equals("success")) {
                                     if (input.split(" ")[1].toLowerCase().equals("logout")) {
                                         keepGoing = false;
@@ -105,6 +105,9 @@ public class Read implements Runnable {
                                     }
                                 }
                                 else if (input.toLowerCase().equals("fail login")) {
+                                }
+                                else if (input.split(" ")[1].toLowerCase().equals("<broadcast>")){
+                                    System.out.println(input);
                                 }
                                 else{
                                     //System.out.println(input);

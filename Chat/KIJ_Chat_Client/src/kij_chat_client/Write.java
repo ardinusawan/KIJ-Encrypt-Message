@@ -105,7 +105,7 @@ public class Write implements Runnable {
                                             out.flush();//FLUSH THE STREAM
                                         }
                                     }
-                                    else{
+                                    else{ //bm,login,logout
                                         out.writeObject(input);//SEND IT TO THE SERVER
                                         out.flush();//FLUSH THE STREAM  
                                     }

@@ -267,7 +267,8 @@ public class Client implements Runnable{
                                             for(Client iter:clientList){
                                                 if(iter.username.equals(this.username)){}
                                                 else{
-                                                    iter.sendToClient(this.username + " <BROADCAST>: " + messageOut);
+                                                    iter.sendToClient(this.username + " <BROADCAST> : " + messageOut);
+                                                    System.out.println("this");
                                                 }
                                             }
                                         }
